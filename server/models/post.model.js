@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const validator = require('validator');
 
 const postSchema = mongoose.Schema(
     {
@@ -21,8 +22,17 @@ const postSchema = mongoose.Schema(
         },
         url:{
             type:String,
-            default:""
+            default:"",
         },
+        views:{
+            type:Number,
+            default:0,
+        },
+        tags:[
+            {
+                type: String,
+            }
+        ]
     },
     {
         timestamps:true

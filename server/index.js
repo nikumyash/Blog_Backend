@@ -14,9 +14,10 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/',(req,res,next)=>{
     res.send("Hello world")
 })
+app.use('/user',require('./routes/user.route'))
 app.use('/api/test',require('./routes/test.route'))
 app.use('*',(req,res)=>{
-    res.status(404).json("Page not found")
+    res.status(404).json({success:false,error:"Page not found"})
 })
 
 app.listen(PORT,()=>{
