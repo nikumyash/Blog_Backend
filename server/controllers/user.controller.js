@@ -5,13 +5,14 @@ const bcrypt = require("bcrypt")
 const validator = require('validator');
 const generateJWTandSetCookie = require("./../utils/generateJWT")
 
+
 const registerUser = async (req,res)=>{
     try{
         const {name,email,password} = req.body;
         if(!validator.isEmail(email)){
             return res.status(400).json({success:false,error:"Enter a valid email"});
         }
-        if (!validator.matches(name, "^[a-zA-Z0-9_\.\-]*$" && nameMatch)){
+        if (!validator.matches(name, "^[a-zA-Z0-9_\.\-]*$")){
             return res.status(400).json({success:false,error:"Enter a valid username"});
         }
         if(!name || !email || !password){
@@ -74,22 +75,21 @@ const loginUser = async (req,res)=>{
 }
 const updateUser = async (req,res)=>{
     try{
-        const {id} = req.params
         const {name,email,password,profilePic,bio} = req.body;
-        if(!validator.isEmail(email)){
+        if(email && !validator.isEmail(email)){
             return res.status(400).json({success:false,error:"Enter a valid email"});
         };
-        if(id!==req.user.name){
-            return res.status(400).json({success:false,error:"Cannot update others profile"});
-        }
+        let hPassword;
         if(password){
-            const res = await bcrypt.compare(password,req.user.password);
-            if(res)return res.status(400).json({success:false,error:"New password same as the previous one. Enter a new Password"});
+            const result = await bcrypt.compare(password,req.user.password);
+            if(result)
+                return res.status(400).json({success:false,error:"New password same as the previous one. Enter a new Password"});
+            else{
+                const salt = await bcrypt.genSalt(10);
+                hPassword = await bcrypt.hash(password,salt)
+            }
         }
         const user = await User.findOne({_id:req.user._id});
-        const salt = await bcrypt.genSalt(10);
-        const hPassword = await bcrypt.hash(password,salt)
-
         user.name = name || user.name;
         user.bio = bio || user.bio;
         user.email = email || user.email;
@@ -114,19 +114,17 @@ const updateUser = async (req,res)=>{
     }
 }
 
-const getUserProfile = async (req,res)=>{
+const getUserProfile = async (req,res)=>{ 
     try{
         const {query} = req.params;
-        const user = await User.findOne({ name: query }).select("-password").select("-updatedAt").select("-_id");
+        const user = await User.findOne({ name: query }).select({password:0,updatedAt:0,_id:0,__v:0}).populate({path:"posts",select:{_id:0,updatedAt:0,__v:0},options:{sort:'-createdAt',limit:6}});
         if(!user){
             return res.status(404).json({success:false,error:"User Not Found"});
         }
-        const posts = await Post.findMany({author:user._id}).select("-updatedAt").select("-_id")
         return res.status(200).json({
             success:true,
             data:{
-                ...user,
-                posts:posts
+                user
             }
         })
     }catch(e){
@@ -134,7 +132,6 @@ const getUserProfile = async (req,res)=>{
         res.status(500).json({success:false,error:"Something went wrong!!!"});
     }
 }
-
 const logoutUser = (req, res) => {
     try {
         res.cookie("token", "", { maxAge: 1 });

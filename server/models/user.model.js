@@ -24,7 +24,13 @@ const userSchema = mongoose.Schema(
         bio:{
             type:String,
             default:"",
-        }
+        },
+        posts:[
+            {
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"Post"
+            },
+        ]
     },
     {
         timestamps:true

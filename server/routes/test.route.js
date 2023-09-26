@@ -2,8 +2,9 @@ const router = require('express').Router();
 const mongoose = require('mongoose');
 const User = require('../models/user.model')
 const Post = require('../models/post.model')
+const isAuthenticated = require("./../middleware/isAuthenticated");
 
-router.get("/user",async (req,res)=>{
+router.post("/user",async (req,res)=>{
     const user = new User({
         name:"test",
         email:"emfail",
@@ -14,7 +15,7 @@ router.get("/user",async (req,res)=>{
     res.send("done user");
 })
 
-router.get('/post',async(req,res)=>{
+router.post('/post',async(req,res)=>{
     const post = new Post({
         title:"sdfs",
         content:"ssdfsfsf",
@@ -24,6 +25,10 @@ router.get('/post',async(req,res)=>{
     g.author = await User.findById(post.author);
     console.log(g);
     res.json(g);
+})
+
+router.get("/isAuth",isAuthenticated,(req,res)=>{
+    res.json(req.user);
 })
 
 module.exports = router;

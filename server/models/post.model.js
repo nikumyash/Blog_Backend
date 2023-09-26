@@ -23,11 +23,12 @@ const postSchema = mongoose.Schema(
         url:{
             type:String,
             default:"",
+            unique:true,
         },
-        views:{
-            type:Number,
-            default:0,
-        },
+        // views:{
+        //     type:Number,
+        //     default:0,
+        // },
         tags:[
             {
                 type: String,
