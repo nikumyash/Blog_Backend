@@ -1,14 +1,16 @@
 const mongoose = require('mongoose');
 const Category = require('../models/category.model')
+const Post = require('./../models/post.model')
 
 //should be tested
 const createCategory = async (req,res)=>{
     try{
-        if(!req.user.role==='Admin'){
+        if(req.user.role!=='Admin'){
             return res.status(400).json({success:false,error:"Unauthorized"});
         }
-        const {catName} = req.body.toLowerCase();
-        const category = new Category({name:catName});
+        console.log(req.user.role);
+        const name = req.body.name.toLowerCase();
+        const category = new Category({name});
         await category.save();
         return res.status(200).json({success:true,message:"category successfully created"})
     }catch(e){
@@ -19,9 +21,21 @@ const createCategory = async (req,res)=>{
 
 const  getCategories = async (req, res) => {
     try {
-      const categories = await Categories.find().sort("-createdAt").select({_id:0,name:1})
-      res.status(200).json({ categories })
-    } catch (err) {
+        const categories = await Category.find().sort("-createdAt").select({_id:0,name:1})
+        res.status(200).json({ categories })
+    } catch (e) {
+        console.log('Error in getCategories : ',e.message);
+        res.status(500).json({success:false,error:"Something went wrong!!!"});
+    }
+}
+const  getCategoriesAdmin = async (req, res) => {
+    try {
+        if(req.user.role!=='Admin'){
+            return res.status(400).json({success:false,error:"Unauthorized"});
+        }
+        const categories = await Category.find().sort("-createdAt");
+        res.status(200).json({ categories })
+    } catch (e) {
         console.log('Error in getCategories : ',e.message);
         res.status(500).json({success:false,error:"Something went wrong!!!"});
     }
@@ -29,14 +43,14 @@ const  getCategories = async (req, res) => {
 
 const  updateCategories = async (req, res) => {
     try {
-        if(!req.user.role==='Admin'){
+        if(req.user.role!=='Admin'){
             return res.status(400).json({success:false,error:"Unauthorized"});
         }
         const {id} = req.params;
         const {name} = req.body;
-        const categories = await Categories.findOneAndUpdate({_id:id},{name:name.toLowerCase()});
+        const categories = await Category.findOneAndUpdate({_id:id},{name:name.toLowerCase()});
         return res.status(200).json({success:true,error:"Category updated successfully"})
-    } catch (err) {
+    } catch (e) {
         console.log('Error in updateCategories : ',e.message);
         res.status(500).json({success:false,error:"Something went wrong!!!"});
     }
@@ -44,13 +58,13 @@ const  updateCategories = async (req, res) => {
 
 const  deleteCategories = async (req, res) => {
     try {
-        if(!req.user.role==='Admin'){
+        if(req.user.role!=='Admin'){
             return res.status(400).json({success:false,error:"Unauthorized"});
         }
         const {id} = req.params;
-        const categories = await Categories.deleteOne({_id:id});
+        const categories = await Category.deleteOne({_id:id});
         return res.status(200).json({success:true,error:"Category deleted successfully"})
-    } catch (err) {
+    } catch (e) {
         console.log('Error in deleteCategories : ',e.message);
         res.status(500).json({success:false,error:"Something went wrong!!!"});
     }
@@ -74,4 +88,4 @@ const getPostsbyCategory = async(req,res)=>{
     }   
 }
 
-module.exports = {createCategory,getCategories,updateCategories,deleteCategories,getPostsbyCategory};
+module.exports = {createCategory,getCategories,updateCategories,deleteCategories,getPostsbyCategory,getCategoriesAdmin};

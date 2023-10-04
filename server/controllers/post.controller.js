@@ -9,7 +9,7 @@ const Category = require("../models/category.model");
 const createPost = async (req,res)=>{
     try{
         const {title,content,category} = req.body;
-        const thumbnailImage = req.files.thumbnail;
+        const thumbnailImage = req.files?.thumbnail;
         let result;
         if(thumbnailImage){
             result = await uploadImg(thumbnailImage);
@@ -24,7 +24,7 @@ const createPost = async (req,res)=>{
         const userid = req.user._id;
         const url = uuid();
         const post = new Post({
-            title,content,thumbnailImage:result.url||"",category:fcategory._id,author:userid,url
+            title,content,thumbnailImage:result?.url,category:fcategory._id,author:userid,url
         });
         const curpost = await post.save();
         const user = await User.findByIdAndUpdate(userid,{$push:{posts:curpost._id}});
@@ -39,7 +39,7 @@ const createPost = async (req,res)=>{
 const getPost = async (req,res)=>{
     try{
         const {id} = req.params;
-        const post = await Post.findOne({url:id}).select({updatedAt:0,_id:0,__v:0}).populate("author",{password:0,updatedAt:0,_id:0,__v:0,role:0});
+        const post = await Post.findOne({url:id}).select({updatedAt:0,_id:0,__v:0}).populate("author",{password:0,updatedAt:0,_id:0,__v:0,role:0,createdAt:0,posts:0}).populate("category",{_id:0,name:1});
         if(!post)return res.status(404).json({success:false,error:"Post not found"});
         return res.status(200).json({success:true,data:post});
 
@@ -110,38 +110,7 @@ const deletePost = async(req,res)=>{
 const getFeed = async(req,res)=>{
     try{
         const {limit,offset,sort} = req.query;
-        const posts = await Post.find().sort({createdAt:sort||'desc'}).skip(offset||0).limit(limit||10).select({updatedAt:0,_id:0,__v:0}).populate("author",{name:1,_id:0}).populate("category",{name:1,_id:0}).group();
-        // const post = await Post.aggregate([
-        //     {"$sort":{"createdAt":-1}},
-        //     { "$lookup": {
-        //         "from": "User",
-        //         "localField": "author",
-        //         "foreignField": "_id",
-        //         "as": "author",
-        //     }},
-        //     {"$lookup": {
-        //         "from": "Category",
-        //         "localField": "category",
-        //         "foreignField": "_id",
-        //         "as": "category",
-        //     }},
-                // {"$project":{
-                //     author:{
-                //         name:1,_id:0
-                //     },
-                //     category:{
-                //         name:1,_id:0
-                //     }
-                // }}
-        //     {"$unwind":"$author"},
-        //     {"$unwind":"$category"},
-        //     {"$group":{
-        //          _id:"$category"
-        //     }},
-        //     { $sort: { createdAt: sort } },
-        //     { $skip: offset },
-        //     { $limit: limit }
-        // ])
+        const posts = await Post.find().sort({createdAt:sort||'desc'}).skip(offset||0).limit(limit||10).select({updatedAt:0,_id:0,__v:0}).populate("author",{name:1,_id:0}).populate("category",{name:1,_id:0});
         if(!posts)return res.status(404).json({success:false,error:"Posts not found"});
         return res.status(200).json({success:true,data:posts});
     }

@@ -15,14 +15,10 @@ app.use(fileUpload({
     useTempFiles:true,
 }))
 
-app.get('/',(req,res,next)=>{
-    res.send("Hello world")
-})
-app.use('/user',require('./routes/user.route'))
-app.use('/post',require('./routes/post.route'));
-app.use('/category',require('./routes/category.route'));
+app.use('/api/user',require('./routes/user.route'))
+app.use('/api/post',require('./routes/post.route'));
+app.use('/api/categories',require('./routes/category.route'));
 
-app.use('/test',require('./routes/test.route'))
 app.use('*',(req,res)=>{
     res.status(404).json({success:false,error:"Page not found"})
 })
