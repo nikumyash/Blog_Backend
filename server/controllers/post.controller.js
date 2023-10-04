@@ -106,11 +106,58 @@ const deletePost = async(req,res)=>{
         console.log("Error in deletePost : ",e.message);
     }   
 }
-
 const getFeed = async(req,res)=>{
     try{
-        const {limit,offset,sort} = req.query;
-        const posts = await Post.find().sort({createdAt:sort||'desc'}).skip(offset||0).limit(limit||10).select({updatedAt:0,_id:0,__v:0}).populate("author",{name:1,_id:0}).populate("category",{name:1,_id:0});
+        const posts = await Post.aggregate([
+            {$lookup:{
+                from:"users",
+                localField:"author",
+                foreignField:"_id",
+                as:"author"
+            }},
+            {$project:{author:{
+                updatedAt:0,
+                _id:0,
+                __v:0,
+                password:0,
+                email:0,
+                bio:0,
+                role:0,
+                posts:0,
+                createdAt:0,
+            }}},
+            {$lookup:{
+                from:"categories",
+                localField:"category",
+                foreignField:"_id",
+                as:"category"
+            }},
+            {$project:{category:{
+                updatedAt:0,
+                _id:0,
+                __v:0,
+                createdAt:0
+            }}},
+            {$unwind:"$author"},
+            {$unwind:"$category"},
+            {$project:{updatedAt:0,_id:0,__v:0}},
+            {$sort:{createdAt:sort||1}},
+            {$group:{
+                _id:"$category.name",
+                name:{$first:"$category.name"},
+                posts:{$push:"$$ROOT"},
+                count:{$sum:1}
+            }},
+            {
+                $project: {
+                  posts: {
+                    $slice: ['$posts', 0, 4]
+                  },
+                  count: 1,
+                  name:1
+                }
+            }
+        ]);
         if(!posts)return res.status(404).json({success:false,error:"Posts not found"});
         return res.status(200).json({success:true,data:posts});
     }
@@ -119,6 +166,8 @@ const getFeed = async(req,res)=>{
         console.log("Error in getFeed : ",e.message);
     }   
 }
+
+
 
 
 module.exports = {createPost,getPost,updatePost,deletePost,getFeed}

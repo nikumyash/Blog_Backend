@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-const validator = require('validator');
-
 const categorySchema = mongoose.Schema(
     {
         name:{
@@ -14,4 +12,4 @@ const categorySchema = mongoose.Schema(
         timestamps:true
     }
 )
-module.exports = mongoose.model("Category",categorySchema);
+module.exports = mongoose.model("Category",categorySchema,"categories");

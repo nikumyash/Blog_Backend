@@ -6,13 +6,14 @@ const postSchema = mongoose.Schema(
         title:{
             type:String,
             required:true,
+            index:true
         },
         content:{
             type:String,
             required:true,
         },
         author:{
-            type: mongoose.Schema.Types.ObjectId,
+            type: mongoose.Types.ObjectId,
             ref:"User",
             required:true,
         },
@@ -34,4 +35,4 @@ const postSchema = mongoose.Schema(
         timestamps:true
     }
 )
-module.exports = mongoose.model("Post",postSchema);
+module.exports = mongoose.model("Post",postSchema,"posts");

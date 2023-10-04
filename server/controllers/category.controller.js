@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Category = require('../models/category.model')
 const Post = require('./../models/post.model')
 
-//should be tested
+
 const createCategory = async (req,res)=>{
     try{
         if(req.user.role!=='Admin'){
@@ -70,6 +70,7 @@ const  deleteCategories = async (req, res) => {
     }
 }
 
+
 const getPostsbyCategory = async(req,res)=>{
     try{
         const {cat} = req.params;
@@ -78,7 +79,8 @@ const getPostsbyCategory = async(req,res)=>{
         if(!category){
             return res.status(404).json({success:false,error:"Category not found"});
         }
-        const posts = await Post.find({category:category._id}).sort({createdAt:sort||'desc'}).skip(offset||0).limit(limit||10).select({updatedAt:0,_id:0,__v:0}).populate("author",{name:1,_id:0}).populate("category",{name:1,_id:0});
+        const posts = await Post.find({category:category._id}).sort({createdAt:sort||'desc'}).skip(offset||0).limit(limit||10).select({updatedAt:0,_id:0,__v:0}).populate("author",{name:1,_id:0,profilePic:1}).populate("category",{name:1,_id:0});
+        
         if(!posts)return res.status(404).json({success:false,error:"Posts not found"});
         return res.status(200).json({success:true,data:posts});
     }
@@ -87,5 +89,26 @@ const getPostsbyCategory = async(req,res)=>{
         console.log("Error in getPostsbyCategory : ",e.message);
     }   
 }
+
+
+//incomplete
+// const getOtherPostsbyCategory = async(req,res)=>{
+//     try{
+//         const {cat} = req.params;
+//         const {limit,offset,sort} = req.query;
+//         const category = await Category.findOne({name:cat});
+//         if(!category){
+//             return res.status(404).json({success:false,error:"Category not found"});
+//         }
+//         const posts = await Post.find({category:category._id}).sort({createdAt:sort||'desc'}).skip(offset||0).limit(limit||10).select({updatedAt:0,_id:0,__v:0}).populate("author",{name:1,_id:0}).populate("category",{name:1,_id:0});
+        
+//         if(!posts)return res.status(404).json({success:false,error:"Posts not found"});
+//         return res.status(200).json({success:true,data:posts});
+//     }
+//     catch(e){
+//         res.status(500).json({success:false,error:"Something went wrong"});
+//         console.log("Error in getPostsbyCategory : ",e.message);
+//     }   
+// }
 
 module.exports = {createCategory,getCategories,updateCategories,deleteCategories,getPostsbyCategory,getCategoriesAdmin};

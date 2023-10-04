@@ -6,6 +6,7 @@ const userSchema = mongoose.Schema(
             type:String,
             required:true,
             unique:true,
+            index:true
         },
         email:{
             type:String,
@@ -19,7 +20,7 @@ const userSchema = mongoose.Schema(
         },
         profilePic:{
             type:String,
-            default:"",
+            default:"http://res.cloudinary.com/diuvszmko/image/upload/v1696429955/blog/afxdiliq5wacfk3rbmbz.png",
         },
         bio:{
             type:String,
@@ -40,4 +41,4 @@ const userSchema = mongoose.Schema(
         timestamps:true
     }
 )
-module.exports = mongoose.model("User",userSchema);
+module.exports = mongoose.model("User",userSchema,"users");
