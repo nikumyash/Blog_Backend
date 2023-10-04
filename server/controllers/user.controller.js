@@ -4,7 +4,8 @@ const Post = require('../models/post.model')
 const bcrypt = require("bcrypt")
 const validator = require('validator');
 const generateJWTandSetCookie = require("./../utils/generateJWT")
-
+const cloudinary = require('cloudinary');
+const uploadImg = require('./../utils/uploadImg')
 
 const registerUser = async (req,res)=>{
     try{
@@ -75,7 +76,8 @@ const loginUser = async (req,res)=>{
 }
 const updateUser = async (req,res)=>{
     try{
-        const {name,email,password,profilePic,bio} = req.body;
+        const {name,email,password,bio} = req.body;
+        const profilePic = req.files.profilePic;
         if(email && !validator.isEmail(email)){
             return res.status(400).json({success:false,error:"Enter a valid email"});
         };
@@ -90,12 +92,17 @@ const updateUser = async (req,res)=>{
             }
         }
         const user = await User.findOne({_id:req.user._id});
+
         user.name = name || user.name;
         user.bio = bio || user.bio;
         user.email = email || user.email;
-        user.profilePic = profilePic || user.profilePic;
         user.password = hPassword || user.password;
-
+        
+        let result;
+        if(profilePic){
+           result = await uploadImg(profilePic);
+        } 
+        user.profilePic = result.url || user.profilePic;
         await user.save();
         const token = generateJWTandSetCookie({name:user.name,email:user.email},res);
         return res.status(200).json({
@@ -106,7 +113,8 @@ const updateUser = async (req,res)=>{
                 email,
                 profilePic:user.profilePic,
                 token: token
-            }});
+            }
+        });
     }
     catch(e){
         console.log('Error in update user : ',e.message);
@@ -117,7 +125,7 @@ const updateUser = async (req,res)=>{
 const getUserProfile = async (req,res)=>{ 
     try{
         const {query} = req.params;
-        const user = await User.findOne({ name: query }).select({password:0,updatedAt:0,_id:0,__v:0}).populate({path:"posts",select:{_id:0,updatedAt:0,__v:0},options:{sort:'-createdAt',limit:6}});
+        const user = await User.findOne({ name: query }).select({password:0,updatedAt:0,_id:0,__v:0,role:0}).populate({path:"posts",select:{_id:0,updatedAt:0,__v:0},options:{sort:'-createdAt',limit:6}});
         if(!user){
             return res.status(404).json({success:false,error:"User Not Found"});
         }
@@ -142,8 +150,25 @@ const logoutUser = (req, res) => {
     }
 }    
 
+const getUserPosts = async (req,res)=>{
+    try{
+        const {user} = req.params;
+        const {limit,offset,sort} = req.query;
+        if(!user){
+            return res.status(500).json({success:false,error:"Provide a user param"});
+        }
+        const userr = await User.findOne({name:user});
+        if(!userr)return res.status(404).json({success:false,error:"User not found"});
+        const posts = await Post.find({author:userr._id}).sort({createdAt:sort||'desc'}).skip(offset||0).limit(limit||10).select({updatedAt:0,_id:0,__v:0,author:0}); 
+        return res.status(200).json({success:true,data:posts});
+    }
+    catch(e){
+        res.status(500).json({success:false,error:"Something went wrong"});
+        console.log("Error in getUserPost : ",e.message);
+    }   
+}
 
-module.exports = {registerUser,loginUser,updateUser,logoutUser,getUserProfile};
+module.exports = {registerUser,loginUser,updateUser,logoutUser,getUserProfile,getUserPosts};
 
 
 

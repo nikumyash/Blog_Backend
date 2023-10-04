@@ -25,15 +25,10 @@ const postSchema = mongoose.Schema(
             default:"",
             unique:true,
         },
-        // views:{
-        //     type:Number,
-        //     default:0,
-        // },
-        tags:[
-            {
-                type: String,
-            }
-        ]
+        category:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref:"Category"
+        }
     },
     {
         timestamps:true

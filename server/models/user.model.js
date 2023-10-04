@@ -25,6 +25,10 @@ const userSchema = mongoose.Schema(
             type:String,
             default:"",
         },
+        role:{
+            type:String,
+            default:'reader',
+        },
         posts:[
             {
             type:mongoose.Schema.Types.ObjectId,

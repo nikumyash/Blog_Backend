@@ -20,6 +20,7 @@ app.get('/',(req,res,next)=>{
 })
 app.use('/user',require('./routes/user.route'))
 app.use('/post',require('./routes/post.route'));
+app.use('/category',require('./routes/category.route'));
 
 app.use('/test',require('./routes/test.route'))
 app.use('*',(req,res)=>{
