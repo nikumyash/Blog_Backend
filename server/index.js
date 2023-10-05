@@ -18,7 +18,6 @@ app.use(fileUpload({
 app.use('/api/user',require('./routes/user.route'))
 app.use('/api/',require('./routes/post.route'));
 app.use('/api/categories',require('./routes/category.route'));
-// app.use('/api/test',require('./routes/test.route'));
 
 app.use('*',(req,res)=>{
     res.status(404).json({success:false,error:"Page not found"})
