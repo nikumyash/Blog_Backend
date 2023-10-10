@@ -8,7 +8,6 @@ function useMediaQuery(query) {
             setMatches(res.matches);
         }
         const listener = ()=>setMatches(res.matches);
-        console.log(res.matches)
         window.addEventListener("resize",listener);
         return ()=> window.removeEventListener("resize",listener)
     },[query,matches])
