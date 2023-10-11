@@ -3,11 +3,13 @@ require('dotenv').config();
 const connectDB = require('./config/db.config')
 const cookieParser = require('cookie-parser')
 const fileUpload = require('express-fileupload');
+const cors = require("cors")
 
 const PORT = process.env.PORT || 3000
 const app = express();
 connectDB();
 
+app.use(cors());
 app.use(cookieParser());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true })); 

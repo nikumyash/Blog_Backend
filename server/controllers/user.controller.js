@@ -3,7 +3,7 @@ const User = require('../models/user.model')
 const Post = require('../models/post.model')
 const bcrypt = require("bcrypt")
 const validator = require('validator');
-const generateJWTandSetCookie = require("./../utils/generateJWT")
+const generateJWT = require("./../utils/generateJWT")
 const cloudinary = require('cloudinary');
 const uploadImg = require('./../utils/uploadImg')
 
@@ -21,7 +21,7 @@ const registerUser = async (req,res)=>{
         }
         const x = await User.findOne({email});
         if(x){
-            return res.json({success:false,error:"User already exists"});
+            return res.status(403).json({success:false,error:"User already exists"});
         }
         const salt = await bcrypt.genSalt(10);
         const hPassword = await bcrypt.hash(password,salt)
@@ -31,7 +31,7 @@ const registerUser = async (req,res)=>{
             password:hPassword,
         })
         await user.save();
-        const token = generateJWTandSetCookie({name,email},res);
+        const token = generateJWT({name,email});
         return res.status(200).json({
             success:true,
             message:"User registered successfully",
@@ -59,7 +59,7 @@ const loginUser = async (req,res)=>{
         if(!user || !isPasswordValid){
             return res.status(400).json({success:false,error:"Invalid email id or password"})
         }
-        const token = generateJWTandSetCookie({name:user.name,email},res);
+        const token = generateJWT({name:user.name,email});
         return res.status(200).json({
             success:true,
             message:"User logged in successfully",
@@ -104,7 +104,7 @@ const updateUser = async (req,res)=>{
         } 
         user.profilePic = result.url || user.profilePic;
         await user.save();
-        const token = generateJWTandSetCookie({name:user.name,email:user.email},res);
+        const token = generateJWT({name:user.name,email:user.email});
         return res.status(200).json({
             success:true,
             message:"User updated successfully",
@@ -140,15 +140,15 @@ const getUserProfile = async (req,res)=>{
         res.status(500).json({success:false,error:"Something went wrong!!!"});
     }
 }
-const logoutUser = (req, res) => {
-    try {
-        res.cookie("token", "", { maxAge: 1 });
-        return res.status(200).json({ success:true,message: "User logged out successfully" });
-    } catch (err) {
-        res.status(500).json({success:false,error:"Something went wrong!!!"});
-        console.log("Error in signupUser: ", err.message);
-    }
-}    
+// const logoutUser = (req, res) => {
+//     try {
+//         res.cookie("token", "", { maxAge: 1 });
+//         return res.status(200).json({ success:true,message: "User logged out successfully" });
+//     } catch (err) {
+//         res.status(500).json({success:false,error:"Something went wrong!!!"});
+//         console.log("Error in signupUser: ", err.message);
+//     }
+// }    
 
 const getUserPosts = async (req,res)=>{
     try{
@@ -168,7 +168,7 @@ const getUserPosts = async (req,res)=>{
     }   
 }
 
-module.exports = {registerUser,loginUser,updateUser,logoutUser,getUserProfile,getUserPosts};
+module.exports = {registerUser,loginUser,updateUser,getUserProfile,getUserPosts};
 
 
 

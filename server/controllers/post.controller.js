@@ -141,7 +141,7 @@ const getFeed = async(req,res)=>{
             {$unwind:"$author"},
             {$unwind:"$category"},
             {$project:{updatedAt:0,_id:0,__v:0}},
-            {$sort:{createdAt:sort||1}},
+            {$sort:{createdAt:1}},
             {$group:{
                 _id:"$category.name",
                 name:{$first:"$category.name"},
@@ -156,6 +156,9 @@ const getFeed = async(req,res)=>{
                   count: 1,
                   name:1
                 }
+            },
+            {
+                $sort:{count:-1}
             }
         ]);
         if(!posts)return res.status(404).json({success:false,error:"Posts not found"});

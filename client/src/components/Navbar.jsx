@@ -3,8 +3,10 @@ import {Bars3Icon,XMarkIcon} from "@heroicons/react/24/solid"
 import useMediaQuery from "./../hooks/useMediaQuery"
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const Navbar = () => {
+    const {isLoggedIn,user} = useSelector(state=>state.user)
     const isScreenLarge = useMediaQuery("(min-width:1024px)");
     const [isMenuOpen,setIsMenuOpen] = useState(false);
     const navigateTo = useNavigate();
@@ -19,8 +21,8 @@ const Navbar = () => {
                             <SearchBar className="w-full max-w-[320px] lg:w-1/2"/>
                             {isScreenLarge?(<div className="flex justify-between items-center md:gap-4 xl:gap-8">
                                 <button className="text-xl">Explore</button>
-                                <button className="text-xl" onClick={()=>navigateTo(`/auth/login?redirect=${window.location}`)}>Login/Signup</button>
-                                {/* <button className="text-xl">Sign In</button> */}
+                                {!isLoggedIn?<button className="text-xl" onClick={()=>navigateTo(`/auth/login?redirect=${window.location}`)}>Login/Signup</button>
+                                :<button className="text-xl" onClick={()=>navigateTo(`/user/${user?.name}/`)}>My Profile</button>}                                
                             </div>):(
                                 <Bars3Icon className="h-6 w-6 sm:h-8 sm:w-8" onClick={()=>setIsMenuOpen(true)}/>
                             )}
