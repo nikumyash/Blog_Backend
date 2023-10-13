@@ -1,7 +1,7 @@
 
 const PageNotFound = () => {
   return (
-    <div className="mx-auto w-fit">Page Not Found</div>
+    <div className="mx-auto w-fit py-64">Page Not Found</div>
   )
 }
 

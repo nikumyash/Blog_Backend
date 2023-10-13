@@ -10,17 +10,16 @@ const Home = () => {
   useEffect(()=>{
     dispatch(getFeed())
   },[]);
-  console.log(data);
   return (
-    <>
-    { isLoading? <Loading/> :
-      (<div className="w-5/6 mx-auto my-16">
-          {
-            data?.map((cat)=>cat.count>0?<BlogCategoryGroup key={cat.name} cat={cat}/>:<></>
-          )}
-      </div>)
-    }
-    </>
+    <section className="w-full sm:mx-8 lg:w-5/6 lg:mx-auto mt-16">
+      <div className="w-full mx-auto">{ isLoading? <Loading/> :
+        (<div className="max-w-[1500px]">
+            {
+              data?.map((cat)=>cat.count>0?<BlogCategoryGroup key={cat.name} cat={cat}/>:<></>
+            )}
+        </div>)
+      }</div>
+    </section>
   )
 }
 

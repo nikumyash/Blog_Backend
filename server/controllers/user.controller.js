@@ -3,81 +3,16 @@ const User = require('../models/user.model')
 const Post = require('../models/post.model')
 const bcrypt = require("bcrypt")
 const validator = require('validator');
-const generateJWT = require("./../utils/generateJWT")
+const jwt = require("jsonwebtoken")
+const {generateAccessToken,generateRefreshToken} = require("./../utils/generateJWT")
 const cloudinary = require('cloudinary');
 const uploadImg = require('./../utils/uploadImg')
 
-const registerUser = async (req,res)=>{
-    try{
-        const {name,email,password} = req.body;
-        if(!validator.isEmail(email)){
-            return res.status(400).json({success:false,error:"Enter a valid email"});
-        }
-        if (!validator.matches(name, "^[a-zA-Z0-9_\.\-]*$")){
-            return res.status(400).json({success:false,error:"Enter a valid username"});
-        }
-        if(!name || !email || !password){
-            return res.status(400).json({success:false,error:"Either name, email id or password is missing"});
-        }
-        const x = await User.findOne({email});
-        if(x){
-            return res.status(403).json({success:false,error:"User already exists"});
-        }
-        const salt = await bcrypt.genSalt(10);
-        const hPassword = await bcrypt.hash(password,salt)
-        const user = new User({
-            name,
-            email,
-            password:hPassword,
-        })
-        await user.save();
-        const token = generateJWT({name,email});
-        return res.status(200).json({
-            success:true,
-            message:"User registered successfully",
-            data:{
-                username:user.name,
-                email,
-                profilePic:user.profilePic,
-                token: token
-            }});
-    }
-    catch(e){
-        console.log('Error in register user : ',e.message);
-        res.status(500).json({success:false,error:"Something went wrong!!!"});
-    }
-}
 
-const loginUser = async (req,res)=>{
-    try{
-        const {email,password} = req.body;
-        if(!validator.isEmail(email)){
-            return res.status(400).json({success:false,error:"Enter a valid email"});
-        }
-        const user = await User.findOne({email});
-        const isPasswordValid = await bcrypt.compare(password , user?.password || "");
-        if(!user || !isPasswordValid){
-            return res.status(400).json({success:false,error:"Invalid email id or password"})
-        }
-        const token = generateJWT({name:user.name,email});
-        return res.status(200).json({
-            success:true,
-            message:"User logged in successfully",
-            data:{
-                username:user.name,
-                email,
-                profilePic:user.profilePic,
-                token: token
-            }});
-    }catch(e){
-        console.log('Error : ',e.message);
-        res.status(500).json({success:false,error:"Something went wrong!!!"});
-    }
-}
 const updateUser = async (req,res)=>{
     try{
         const {name,email,password,bio} = req.body;
-        const profilePic = req.files.profilePic;
+        const profilePic = req?.files?.profilePic;
         if(email && !validator.isEmail(email)){
             return res.status(400).json({success:false,error:"Enter a valid email"});
         };
@@ -102,17 +37,15 @@ const updateUser = async (req,res)=>{
         if(profilePic){
            result = await uploadImg(profilePic);
         } 
-        user.profilePic = result.url || user.profilePic;
+        user.profilePic = result?.url || user.profilePic;
         await user.save();
-        const token = generateJWT({name:user.name,email:user.email});
+        const accessToken = generateAccessToken({name:user.name,email:user.email});
+        generateRefreshToken({name:user.name,email:user.email},res);
         return res.status(200).json({
             success:true,
             message:"User updated successfully",
             data:{
-                username:user.name,
-                email,
-                profilePic:user.profilePic,
-                token: token
+                accessToken
             }
         });
     }
@@ -125,14 +58,24 @@ const updateUser = async (req,res)=>{
 const getUserProfile = async (req,res)=>{ 
     try{
         const {query} = req.params;
-        const user = await User.findOne({ name: query }).select({password:0,updatedAt:0,_id:0,__v:0,role:0}).populate({path:"posts",select:{_id:0,updatedAt:0,__v:0},options:{sort:'-createdAt',limit:6}});
+        const refreshtoken = req?.cookies?.["refreshToken"];
+        let decoded;
+        if(refreshtoken){
+            try{
+                decoded = jwt.verify(refreshtoken,process.env.REFRESH_SECRET);
+            }catch(e){}
+        }
+        const user = await User.findOne({ name: query }).select({password:0,updatedAt:0,_id:0,__v:0,role:0}).populate({path:"posts",select:{_id:0,updatedAt:0,__v:0},options:{sort:'-createdAt',limit:20}});
         if(!user){
             return res.status(404).json({success:false,error:"User Not Found"});
         }
         return res.status(200).json({
             success:true,
             data:{
-                user
+                user:{
+                    ...user._doc,
+                    isEditable:decoded?.name===user?.name
+                }                
             }
         })
     }catch(e){
@@ -140,35 +83,26 @@ const getUserProfile = async (req,res)=>{
         res.status(500).json({success:false,error:"Something went wrong!!!"});
     }
 }
-// const logoutUser = (req, res) => {
-//     try {
-//         res.cookie("token", "", { maxAge: 1 });
-//         return res.status(200).json({ success:true,message: "User logged out successfully" });
-//     } catch (err) {
-//         res.status(500).json({success:false,error:"Something went wrong!!!"});
-//         console.log("Error in signupUser: ", err.message);
+
+// const getUserPosts = async (req,res)=>{
+//     try{
+//         const {user} = req.params;
+//         const {limit,offset,sort} = req.query;
+//         if(!user){
+//             return res.status(500).json({success:false,error:"Provide a user param"});
+//         }
+//         const userr = await User.findOne({name:user});
+//         if(!userr)return res.status(404).json({success:false,error:"User not found"});
+//         const posts = await Post.find({author:userr._id}).sort({createdAt:sort||'desc'}).skip(offset||0).limit(limit||10).select({updatedAt:0,_id:0,__v:0,author:0}); 
+//         return res.status(200).json({success:true,data:posts});
 //     }
-// }    
+//     catch(e){
+//         res.status(500).json({success:false,error:"Something went wrong"});
+//         console.log("Error in getUserPost : ",e.message);
+//     }   
+// }
 
-const getUserPosts = async (req,res)=>{
-    try{
-        const {user} = req.params;
-        const {limit,offset,sort} = req.query;
-        if(!user){
-            return res.status(500).json({success:false,error:"Provide a user param"});
-        }
-        const userr = await User.findOne({name:user});
-        if(!userr)return res.status(404).json({success:false,error:"User not found"});
-        const posts = await Post.find({author:userr._id}).sort({createdAt:sort||'desc'}).skip(offset||0).limit(limit||10).select({updatedAt:0,_id:0,__v:0,author:0}); 
-        return res.status(200).json({success:true,data:posts});
-    }
-    catch(e){
-        res.status(500).json({success:false,error:"Something went wrong"});
-        console.log("Error in getUserPost : ",e.message);
-    }   
-}
-
-module.exports = {registerUser,loginUser,updateUser,getUserProfile,getUserPosts};
+module.exports = {updateUser,getUserProfile};
 
 
 

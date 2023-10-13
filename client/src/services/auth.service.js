@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:3000/api/user/auth/";
+const API_URL = "http://localhost:3000/api/auth/";
 
 const signup = (userData)=>{
     return axios.post(API_URL+"signup",{
@@ -8,10 +8,12 @@ const signup = (userData)=>{
         email:userData.email,
         password:userData.password
     }).then((res)=>{
-        if(res.data?.data?.token){
-            localStorage.setItem("user",JSON.stringify(res.data.data))
+        console.log(res.data);
+        if(res.data?.data?.accessToken){
+            localStorage.setItem("token",res.data?.data?.accessToken);
+            localStorage.setItem("user",JSON.stringify(res.data?.data?.user));
         }
-        return res
+        return res;
     })
 }
 const login = (userData)=>{
@@ -19,14 +21,18 @@ const login = (userData)=>{
         email:userData.email,
         password:userData.password
     }).then((res)=>{
-        if(res.data.data.token){
-            localStorage.setItem("user",JSON.stringify(res.data.data))
+        console.log(res.data);
+        if(res.data?.data?.accessToken){
+            localStorage.setItem("token",res.data?.data?.accessToken);
+            localStorage.setItem("user",JSON.stringify(res.data?.data?.user));
         }
         return res
     })
 }
 
-const logout = () => {
+const logout = async () => {
+    await axios.put(API_URL+"logout");
+    localStorage.removeItem("token");
     localStorage.removeItem("user");
 };
 const AuthService = {signup,login,logout}

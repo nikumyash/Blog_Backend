@@ -20,7 +20,7 @@ const userSchema = mongoose.Schema(
         },
         profilePic:{
             type:String,
-            default:"http://res.cloudinary.com/diuvszmko/image/upload/v1696429955/blog/afxdiliq5wacfk3rbmbz.png",
+            default:"http://res.cloudinary.com/diuvszmko/image/upload/v1697118287/blog/krcksmlpiyyw6lfe7qxp.webp",
         },
         bio:{
             type:String,

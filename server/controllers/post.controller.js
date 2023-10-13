@@ -141,7 +141,7 @@ const getFeed = async(req,res)=>{
             {$unwind:"$author"},
             {$unwind:"$category"},
             {$project:{updatedAt:0,_id:0,__v:0}},
-            {$sort:{createdAt:1}},
+            {$sort:{createdAt:-1}},
             {$group:{
                 _id:"$category.name",
                 name:{$first:"$category.name"},
@@ -169,6 +169,8 @@ const getFeed = async(req,res)=>{
         console.log("Error in getFeed : ",e.message);
     }   
 }
+
+
 
 
 

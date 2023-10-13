@@ -1,13 +1,11 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit"
 import AuthService from "../services/auth.service"
 
-const user = JSON.parse(localStorage.getItem("user")) || "";
-
 export const registerUser = createAsyncThunk("auth/signup",
     async(userData,thunkApi)=>{
         try{
             const res = await AuthService.signup(userData);
-            return res.data.data;
+            return res.data.data.user;
         }
         catch(err){
             return thunkApi.rejectWithValue(err?.response?.data?.error);
@@ -19,7 +17,7 @@ export const loginUser = createAsyncThunk("auth/login",
     async(userData,thunkApi)=>{
         try{
             const res = await AuthService.login(userData);
-            return res.data.data;
+            return res.data.data.user;
         }
         catch(err){
             return thunkApi.rejectWithValue(err?.response?.data?.error)       
@@ -33,9 +31,10 @@ export const logoutUser = createAsyncThunk("auth/logout",
     }
 )
 
-const initialState = user? {
+const user = JSON.parse(localStorage.getItem("user")) || null;
+const initialState = user?{
     isLoggedIn:true,
-    user:user,
+    user,
     error:null
 }:{
     isLoggedIn:false,
@@ -58,7 +57,7 @@ export const userSlice = createSlice({
         }),
         builder.addCase(loginUser.fulfilled,(state, action) => {
             state.isLoggedIn = true;
-            state.user = action.payload.user;
+            state.user = action.payload;
             state.error = null;
         }),
         builder.addCase(loginUser.rejected,(state, action) => {

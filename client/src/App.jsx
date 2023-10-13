@@ -6,6 +6,8 @@ import SignUpPage from './pages/SignUpPage'
 import {Provider} from "react-redux"
 import store from "./store"
 import PageNotFound from './pages/PageNotFound'
+import ProfilePage from './pages/ProfilePage'
+import CreatePostPage from './pages/CreatePostPage'
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
             <Routes>
               <Route path="/" element={<MainLayout/>}>
                 <Route index element={<Home/>}/>
+                <Route path="/user/:slug" element={<ProfilePage/>}/>
+                <Route path="/posts/create" element={<CreatePostPage/>}/>
                 <Route path='*' element={<PageNotFound/>}></Route>
               </Route>
               <Route path="/auth">
